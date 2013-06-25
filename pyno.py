@@ -27,7 +27,6 @@
 #	check if connesso
 #	check posta
 #	cl-options
-#	ripetizione delle notifiche [1,2,4,8..]
 #	libnotify bindings for python
 #	icone notify-send
 #	se ci sono problemi a salvare il log non salvarlo e skippa ma continua
@@ -39,7 +38,7 @@ import sys, time
 import subprocess
 
 
-refresh_time = 60
+refresh_time = 2
 
 
 class log(object):
@@ -69,25 +68,29 @@ class log(object):
 
 
 """ Class used for having fibonacci style timed notifications.
-	Everytime you touch() a pybonacci object, it return you if need to
+	Everytime you touch() a pybonacci object, it returns 1 if need to
 	wait or not.
 """
 class pybonacci(object):
 	def __init__(self):
-		self.val   = 1;
-		self.last  = 0;
 		self.count = 0;
 	def touch(self):
-		self.count += 1
-		actual      = self.val
-		self.val   += self.last
-		self.last   = actual
-		return self.val == self.count
+		# start to fibonacci at first touch
+		if self.count == 0:
+			self.value  = 2
+			self.last   = 1
+			self.count += 1
+			return 1
+		if self.count < self.value:
+			# not a fibonacci value, wait
+			self.count += 1
+			return 0
+		# fibonacci increment
+		self.value += self.last
+		self.last = self.value - self.last
+		return 1
 	def reset(self):
 		self.__init__()
-	def cl_info(self):
-		print "self.val: " + str(self.val) + "\nself.last: " + str(self.last) + "\nself.count: " + str(self.count)
-
 
 
 """ check if deps are installed in the system """
@@ -123,9 +126,9 @@ def check_fb():
 
 	def fbcmd_notices(s = "fbcmd notices unread"):
 		output = str(subprocess.check_output(s, shell = True))
-		#f = open("/home/walter/tmp/fbcmd_example_output/3notices", 'r')
-		#output = f.read()
-		#f.close()
+		f = open("/home/walter/tmp/fbcmd_example_output/3notices", 'r')
+		output = f.read()
+		f.close()
 		notices = []
 		for comment in output.split("\n\n"):
 			""" TODO posso fare un for per le linee per poter exittare senza l'eccezione """
@@ -210,7 +213,7 @@ def check_fb():
 
 	# fibonacci wait
 	if FB_VARS['last_msg'] == msg:
-		if FB_VARS['fib'].touch():
+		if not FB_VARS['fib'].touch():
 			return
 	else:
 		FB_VARS['fib'].reset()
