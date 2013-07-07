@@ -1,5 +1,8 @@
 #!/usr/bin/env python2
 #
+#  pyno.py
+#
+#  Copyright 2013 Walter Barbagallo
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -38,7 +41,7 @@ import sys, time
 import subprocess
 
 
-refresh_time = 2
+refresh_time = 60
 
 
 class log(object):
@@ -126,16 +129,16 @@ def check_fb():
 
 	def fbcmd_notices(s = "fbcmd notices unread"):
 		output = str(subprocess.check_output(s, shell = True))
-		f = open("/home/walter/tmp/fbcmd_example_output/3notices", 'r')
-		output = f.read()
-		f.close()
+		#f = open("/home/walter/tmp/fbcmd_example_output/3notices", 'r')
+		#output = f.read()
+		#f.close()
 		notices = []
 		for comment in output.split("\n\n"):
-			""" TODO posso fare un for per le linee per poter exittare senza l'eccezione """
 			if "[#]" in comment or comment == "":
 				continue
 			if not ":title" in comment:
 				LOG.append("[ERRORE] formato commento non valido:\n" + comment)
+				return []
 			value = " ".join(comment[comment.index(":title")+6:].split())
 			notices.append(value)
 		return notices
@@ -164,7 +167,7 @@ def check_fb():
 
 			if sender == "" or text == "":
 				LOG.append("[ERRORE] formato messaggio non valido:\n" + message)
-				sys.exit(1)
+				return []
 			inbox.append(sender + " ha scritto: " + text)
 		return inbox
 
