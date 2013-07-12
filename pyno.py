@@ -96,8 +96,23 @@ class pybonacci(object):
 		self.__init__()
 
 
-""" check if deps are installed in the system """
 def check_system():
+	""" TODO: replace with regex
+	"""
+	def fbcmd_getErrorCode(s):
+		for line in s.split("\n"):
+			if "[" in line and "]" in line:
+				idx1 = line.index("[")
+				idx2 = line.index("]")
+				if idx1 != 0:
+					continue # not the corret line with error code
+				try:
+					return ( int(line[idx1+1:idx2]), line[idx2+1:].strip() )
+				except:
+					pass # do nothing
+			return 0
+	
+
 	cmds = [ "notify-send", "fbcmd" ]
 	err_msg = "\n\
 [Errore] Impossibile lanciare pyno (Mancate dipendenze)\n\
@@ -116,7 +131,30 @@ Installare:"
 		LOG.append(out_msg)
 		sys.exit(2)
 
-	LOG.append("system check: ok")
+	# Step 2: check if fbcmd works properly
+	# TODO: make it notify as a normal notification
+#	f = open("./test/session_expired", 'r')
+#	output = f.read()
+#	f.close()
+	output = str(subprocess.check_output("fbcmd", shell = True))
+	print output
+	if "ERROR" in output:
+		some_err += 1
+		(code, msg) = fbcmd_getErrorCode(output)
+		if code == 102:
+			title = "FBCMD ERROR " + str(code)
+			msg  += "\n[maybe you need to reauth fbcmd]"
+		else:
+			title = "FBCMD UNKNOW ERROR"
+			msg  += "\n[please check your fbcmd installation]"
+		notify(title, msg)
+
+	s = "system check: "
+	if some_err:
+		s += "not ok"
+	else:
+		s += "ok"
+	LOG.append(s)
 
 
 def notify(title = "", msg = ""):
