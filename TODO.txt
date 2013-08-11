@@ -1,0 +1,10 @@
+TODO
+	[ ] installazione fbcmd
+	[ ] check if connesso
+	[ ] check posta
+	[v] cl-options
+	[ ] libnotify bindings for python
+	[ ] icone notify-send
+	[ ] fb classe
+	[ ] notify on consoles
+	[ ] pid

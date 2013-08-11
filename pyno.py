@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 #
-#  pyno.py
+#  pyno: an event notifier script
 #
 #  Copyright 2013 Walter Barbagallo
 #
@@ -23,51 +23,25 @@
 # @author Walter Barbagallo
 # @contact turbometalskater at gmail dot com
 # @version 0.2
-#
-#
-# TODO
-#	installazione fbcmd
-#	check if connesso
-#	check posta
-#	cl-options
-#	libnotify bindings for python
-#	icone notify-send
-#	se ci sono problemi a salvare il log non salvarlo e skippa ma continua
-#	print usage
-#	fb classe
-#
 
-import sys, time
-import subprocess
+import sys, time, subprocess
+
+REFRESH_TIME = 60
 
 
-refresh_time = 60
 
-
+""" Class used for debug purposes
+"""
 class log(object):
 	def __init__(self):
-		import os, datetime
-		self.filename = "pyno.log"
+		import datetime
 		self.now = lambda : datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-		cwd = os.path.dirname(os.path.realpath(__file__))
-		os.chdir(cwd)
+		self.show("pyno started")
 
-		try:
-			f = open(self.filename, 'w')
-		except IOError:
-			print "[errore] impossibile creare il file " + self.filename + "."
-			sys.exit(1)
-		f.write("[" + self.now() + "]\npyno started\n\n")
-		f.close()
+	def show(self, s):
+		print "[" + self.now() + "] " + s
+# end of class log
 
-	def append(self, s):
-		try:
-			f = open(self.filename, 'a')
-		except IOError:
-			print "[errore] impossibile aprire il file " + self.filename + "."
-			sys.exit(2)
-		f.write("[" + self.now() + "]\n" + s + '\n\n')
-		f.close()
 
 
 """ Class used for having fibonacci style timed notifications.
@@ -78,7 +52,6 @@ class pybonacci(object):
 	def __init__(self):
 		self.count = 0;
 	def touch(self):
-		# start to fibonacci at first touch
 		if self.count == 0:
 			self.value  = 2
 			self.last   = 1
@@ -88,7 +61,6 @@ class pybonacci(object):
 			# not a fibonacci value, wait
 			self.count += 1
 			return 0
-		# fibonacci increment
 		self.value += self.last
 		self.last = self.value - self.last
 		return 1
@@ -96,9 +68,9 @@ class pybonacci(object):
 		self.__init__()
 
 
+
 def check_system():
-	""" TODO: replace with regex
-	"""
+	# TODO : replace with regex
 	def fbcmd_getErrorCode(s):
 		for line in s.split("\n"):
 			if "[" in line and "]" in line:
@@ -127,8 +99,7 @@ Installare:"
 			some_err = 1
 			out_msg += "  - " + c
 	if some_err:
-		print(out_msg)
-		LOG.append(out_msg)
+		LOG.show(out_msg)
 		sys.exit(2)
 
 	# Step 2: check if fbcmd works properly
@@ -136,8 +107,7 @@ Installare:"
 #	f = open("./test/session_expired", 'r')
 #	output = f.read()
 #	f.close()
-	output = str(subprocess.check_output("fbcmd", shell = True))
-	print output
+	output = str(subprocess.check_output("fbcmd &> /dev/null", shell = True))
 	if "ERROR" in output:
 		some_err += 1
 		(code, msg) = fbcmd_getErrorCode(output)
@@ -154,7 +124,7 @@ Installare:"
 		s += "not ok"
 	else:
 		s += "ok"
-	LOG.append(s)
+	LOG.show(s)
 
 
 def notify(title = "", msg = ""):
@@ -175,7 +145,7 @@ def check_fb():
 			if "[#]" in comment or comment == "":
 				continue
 			if not ":title" in comment:
-				LOG.append("[ERRORE] formato commento non valido:\n" + comment)
+				LOG.show("[ERRORE] formato commento non valido:\n" + comment)
 				return []
 			value = " ".join(comment[comment.index(":title")+6:].split())
 			notices.append(value)
@@ -204,7 +174,7 @@ def check_fb():
 						text += line.strip()
 
 			if sender == "" or text == "":
-				LOG.append("[ERRORE] formato messaggio non valido:\n" + message)
+				LOG.show("[ERRORE] formato messaggio non valido:\n" + message)
 				return []
 			inbox.append(sender + " ha scritto: " + text)
 		return inbox
@@ -262,26 +232,42 @@ def check_fb():
 	FB_VARS['last_msg'] = msg
 	notify(title, msg)
 
-	# check_fb() end
+# end of check_fb()
+
+
+
+def parse_argv():
+
+	import argparse
+
+	desc = "pyno: an event notifier script"
+
+	parser = argparse.ArgumentParser(description=desc)
+	parser.add_argument('--no-log', '-n',
+						action='store_true',
+						help='don\'t log on a file')
+
+	return parser.parse_args()
+
+# end of parse_argv()
 
 
 
 if __name__ == '__main__':
 	LOG = log()
-	NUM_POLLING = 0;
+	ARGV = parse_argv()
 	FB_VARS = {}
 
 	check_system()
 	try:
 		while 1:
-			NUM_POLLING += 1
 			check_fb()
-			time.sleep(refresh_time)
+			time.sleep(REFRESH_TIME)
 	except KeyboardInterrupt:
-		print("\nLooped " + str(NUM_POLLING) + " times.\nBye!")
+		print "\nKeyboardInterrupt. Bye!"
 		pass
 	except:
 		import traceback
-		LOG.append(traceback.format_exc())
-		notify(title = "Errore inaspettato", msg = "Perfavore controlla pyno.log o invialo a walter")
+		LOG.show(traceback.format_exc())
+		notify(title = __file__, msg = "Unexpected error")
 		raise
