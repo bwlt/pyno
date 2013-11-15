@@ -8,3 +8,6 @@ TODO
 	[ ] fb classe
 	[ ] notify on consoles
 	[ ] pid
+
+PUSH REQ
+Configurazione fbcmd + pyno start in bg
