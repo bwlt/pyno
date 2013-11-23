@@ -114,6 +114,24 @@ print "FBCMD CONFIGURATION COMPLETED\n\n";
 
 print "-" x 75 . "\n\n";
 
-print "Starting pyno...\n\n";
+# Nofication icon
+print "Would you want use pyno with icon? [y\\n]";
+my $icoVal;
+while ( $icoVal = <STDIN> ) {
+	chomp $icoVal;
+	$icoVal =~ /y|n/i ? last : print "Type Y or N\n";
+}
+
+# Pyno base cong address
+my	$PYNO_CFG_DIR	= "~/.config/pyno";
+
+if ( lc $icoVal eq "y" ) {
+	system( "mkdir ".$PYNO_CFG_DIR."; cp -R ./pynoico.png ".$PYNO_CFG_DIR );
+	print "pynoico.png copied in ".$PYNO_CFG_DIR."\n";
+	system( "echo \"ICON:".$PYNO_CFG_DIR."/pynoico.png\" > ".$PYNO_CFG_DIR."/pyno.conf"); 
+	print "pyno.conf created into ".$PYNO_CFG_DIR."\n";
+}
+	
+print "\nStarting pyno...\n\n";
 
 -e "./pyno.py" ? system("./pyno.py > /dev/null 2>&1 &") : die "pyno.py not found";
