@@ -129,7 +129,6 @@ Installare:"
 
 def notify(title = "", msg = ""):
     cmd = "notify-send " + NOTIFY_ICON + " \"" + title + "\" \"" + msg + "\""
-    print cmd
     subprocess.call(cmd, shell = True)
     return 0
 
