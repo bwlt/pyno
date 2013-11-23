@@ -27,7 +27,7 @@
 import sys, time, subprocess
 
 REFRESH_TIME = 60
-
+NOTIFY_ICON = ""
 
 
 """ Class used for debug purposes
@@ -128,7 +128,7 @@ Installare:"
 
 
 def notify(title = "", msg = ""):
-    cmd = "notify-send " + " \"" + title + "\" \"" + msg + "\""
+    cmd = "notify-send " + NOTIFY_ICON + " \"" + title + "\" \"" + msg + "\""
     subprocess.call(cmd, shell = True)
     return 0
 
@@ -251,7 +251,27 @@ def parse_argv():
 
 # end of parse_argv()
 
-
+def conf_read():
+	
+	from os.path import expanduser
+	user_home = expanduser("~")
+	
+	try:
+		conf_file	= open( user_home + "/.config/pyno/pyno.conf", "r" )
+	except IOError:
+		return 1
+		
+	while 1:
+		conf_line	= conf_file.readline();
+		if len( conf_line ) == 0:
+			break
+		[par_name, par_value] = conf_line.split( ":" )
+		if par_name == "ICON":
+			global NOTIFY_ICON
+			NOTIFY_ICON = "-i " + par_value.rstrip()
+			
+	return 0
+	
 
 if __name__ == '__main__':
     LOG = log()
@@ -259,6 +279,7 @@ if __name__ == '__main__':
     FB_VARS = {}
 
     check_system()
+    conf_read();
     try:
         while 1:
             check_fb()
